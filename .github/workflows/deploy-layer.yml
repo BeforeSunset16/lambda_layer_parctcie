@@ -19,10 +19,12 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dependencies to layer folder
-        run: |
-          mkdir -p python
-          pip install -r requirements-layer.txt -t python/
+      - name: Install dependencies to layer folder (wheel only)
+      run: |
+        mkdir -p python
+        python -m pip install --upgrade pip
+        python -m pip install --only-binary=:all: -r requirements-layer.txt -t python/
+        
 
       - name: Zip Lambda layer
         run: zip -r lambda_layer.zip python

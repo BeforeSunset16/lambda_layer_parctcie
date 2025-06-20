@@ -1,2 +1,2 @@
-pandas
-pytz
+pandas == 2.3.0
+pytz == 2025.2
