@@ -4,11 +4,10 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - main  # 你也可以换成 production 或 master
+      - main
 
 jobs:
   build-deploy-layer:
-    name: Build and Deploy Lambda Layer
     runs-on: ubuntu-latest
 
     steps:
@@ -28,15 +27,17 @@ jobs:
       - name: Zip Lambda layer
         run: zip -r lambda_layer.zip python
 
-      - name: Publish Lambda layer
-        uses: aws-actions/aws-cli-action@v1
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
-          inline-script: |
-            aws lambda publish-layer-version \
-              --layer-name my-python-deps \
-              --zip-file fileb://lambda_layer.zip \
-              --compatible-runtimes python3.11 \
-              --description "Layer with pandas, snowflake connector, and pytz"
+
+      - name: Publish Lambda layer
+        run: |
+          aws lambda publish-layer-version \
+            --layer-name my-python-deps \
+            --zip-file fileb://lambda_layer.zip \
+            --compatible-runtimes python3.11 \
+            --description "Layer with pandas, snowflake connector, and pytz"
