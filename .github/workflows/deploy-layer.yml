@@ -1,0 +1,42 @@
+name: Build and Deploy Lambda Layer
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main  # 你也可以换成 production 或 master
+
+jobs:
+  build-deploy-layer:
+    name: Build and Deploy Lambda Layer
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies to layer folder
+        run: |
+          mkdir -p python
+          pip install -r requirements-layer.txt -t python/
+
+      - name: Zip Lambda layer
+        run: zip -r lambda_layer.zip python
+
+      - name: Publish Lambda layer
+        uses: aws-actions/aws-cli-action@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+          inline-script: |
+            aws lambda publish-layer-version \
+              --layer-name my-python-deps \
+              --zip-file fileb://lambda_layer.zip \
+              --compatible-runtimes python3.11 \
+              --description "Layer with pandas, snowflake connector, and pytz"
