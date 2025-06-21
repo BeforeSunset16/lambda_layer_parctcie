@@ -1,4 +1,4 @@
-docker build -t lambda-layer-builder .
-docker run --name build-layer lambda-layer-builder
-docker cp build-layer:/opt/lambda_layer.zip .
-docker rm build-layer
+docker build -t snowflake-pytz-layer-builder .
+docker run --name snowflake-pytz-builder snowflake-pytz-layer-builder
+docker cp snowflake-pytz-builder:/opt/snowflake-pytz-docker-layer.zip ./snowflake-pytz-docker-layer.zip
+docker rm snowflake-pytz-builder
