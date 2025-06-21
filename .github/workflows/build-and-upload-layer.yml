@@ -51,5 +51,5 @@ jobs:
             --layer-name snowflake-pytz-docker-layer \
             --zip-file fileb://snowflake-pytz-docker-layer.zip \
             --compatible-runtimes python3.11 \
-            --architecture x86_64 \
+            --compatible-architectures x86_64 \
             --description "Lambda layer built with Docker containing snowflake-connector and pytz - Deployed on $(date)" 
