@@ -1,33 +1,22 @@
-name: Build and Deploy Lambda Layer
+name: Build and Deploy Snowflake + Pytz Layer with Docker
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
 
 jobs:
-  build-deploy-layer:
+  build-and-upload:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Install dependencies to layer folder (wheel only)
+      - name: Build Lambda Layer in Docker
         run: |
-          mkdir -p python
-          python -m pip install --upgrade pip
-          python -m pip install --only-binary=:all: -r requirements-layer.txt -t python/
-        
-
-      - name: Zip Lambda layer
-        run: zip -r lambda_layer.zip python
+          docker build -t snowflake-pytz-layer-builder .
+          docker run --name snowflake-pytz-builder snowflake-pytz-layer-builder
+          docker cp snowflake-pytz-builder:/opt/snowflake-pytz-docker-layer.zip ./snowflake-pytz-docker-layer.zip
+          docker rm snowflake-pytz-builder
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -36,10 +25,11 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Publish Lambda layer
+      - name: Publish Lambda Layer
         run: |
           aws lambda publish-layer-version \
-            --layer-name my-python-deps \
-            --zip-file fileb://lambda_layer.zip \
+            --layer-name snowflake-pytz-docker-layer \
+            --zip-file fileb://snowflake-pytz-docker-layer.zip \
             --compatible-runtimes python3.11 \
-            --description "Layer with pandas and pytz"
+            --architecture x86_64 \
+            --description "Lambda layer built with Docker containing snowflake-connector and pytz"
